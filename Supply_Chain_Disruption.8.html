@@ -1,0 +1,59 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>8. Supply Chain Disruption Prediction</title><style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#1c2333;--mut:#667085;--line:#e4e7ee;--ac:#4f46e5;--in:#0ea5e9;--pr:#6366f1;--de:#f59e0b;--ou:#10b981}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 18px 60px}a{color:var(--ac)}
+h1{font-size:26px;margin:6px 0}h2{font-size:18px;margin:0 0 12px}.tag{display:inline-block;background:#eef2ff;color:var(--ac);border-radius:99px;padding:2px 12px;font-size:12px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:16px 0}
+.flow{display:flex;flex-direction:column;align-items:center;gap:0}
+.node{width:min(560px,100%);padding:10px 16px;border-radius:10px;text-align:center;font-size:14px;border:2px solid;background:#fff}
+.node.input{border-color:var(--in);background:#f0f9ff;border-radius:99px}.node.process{border-color:var(--pr);background:#eef2ff}
+.node.decision{border-color:var(--de);background:#fffbeb;transform:skewX(-6deg);font-weight:600}.node.decision span{display:inline-block;transform:skewX(6deg)}
+.node.output{border-color:var(--ou);background:#ecfdf5;border-radius:99px;font-weight:600}
+.arrow{width:2px;height:18px;background:#98a2b3;position:relative}.arrow:after{content:"";position:absolute;bottom:-1px;left:-4px;border:5px solid transparent;border-top:7px solid #98a2b3;border-bottom:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-bottom:12px}.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;border:2px solid;margin-right:4px;vertical-align:-2px}
+pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;overflow:auto;font-size:13px;line-height:1.5;margin:0}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:14px}.ctl label{font-size:13px;color:var(--mut);display:block}.ctl b{color:var(--ink)}input[type=range]{width:100%;accent-color:var(--ac)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}.kpi{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px 12px}.kpi small{color:var(--mut);display:block;font-size:12px}.kpi div{font-size:19px;font-weight:700}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line)}th{background:#f8fafc;color:var(--mut);font-weight:600}.tw{overflow:auto}
+.bars{margin-top:14px}.br{display:grid;grid-template-columns:150px 1fr 70px;gap:8px;align-items:center;font-size:12px;margin:4px 0}.bt{background:#eef0f6;border-radius:6px;height:16px;position:relative}.bf{height:100%;border-radius:6px;background:var(--ac)}.bf.neg{background:#ef4444}.ref{position:absolute;top:-3px;bottom:-3px;width:2px;background:#111}
+.ins{background:#eef2ff;border-left:4px solid var(--ac);padding:10px 14px;border-radius:6px;margin-top:14px;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}.grid a{text-decoration:none;color:inherit}.grid .card{margin:0;height:100%;transition:.15s}.grid .card:hover{border-color:var(--ac);transform:translateY(-2px)}
+.grid p{color:var(--mut);font-size:13px;margin:6px 0 0}.nav{display:flex;justify-content:space-between;margin-top:20px;font-size:14px}
+</style></head><body><div class="wrap">
+<div style="margin-top:10px"><span class="tag">Operations · Project 8</span></div><h1>Supply Chain Disruption Prediction</h1>
+<div class="card"><h2>Problem</h2><p style="margin:0">Production delays happen because supplier, inventory and transport problems are spotted too late. Detect emerging risks early and recommend mitigation.</p></div>
+<div class="card"><h2>Algorithm flow</h2><div class="legend"><span><i style="border-color:var(--in);background:#f0f9ff"></i>Input</span><span><i style="border-color:var(--pr);background:#eef2ff"></i>Process</span><span><i style="border-color:var(--de);background:#fffbeb"></i>Decision</span><span><i style="border-color:var(--ou);background:#ecfdf5"></i>Output</span></div><div class="flow"><div class="node input"><span>Stream supplier OTIF, lead-time, inventory, production plan, shipment tracking</span></div><div class="arrow"></div><div class="node process"><span>Compute leading indicators: lead-time drift, OTIF decline, days-of-cover, transit delay</span></div><div class="arrow"></div><div class="node process"><span>Normalise each indicator 0–1</span></div><div class="arrow"></div><div class="node process"><span>Weighted risk score per supplier / part (weights adjustable)</span></div><div class="arrow"></div><div class="node decision"><span>Risk ≥ threshold or days-of-cover &lt; lead time ?</span></div><div class="arrow"></div><div class="node process"><span>YES → raise alert; estimate production impact (days at risk)</span></div><div class="arrow"></div><div class="node process"><span>Pick mitigation: expedite, alternate supplier, buffer stock, re-route</span></div><div class="arrow"></div><div class="node output"><span>Ranked risk board + mitigation actions</span></div></div></div>
+<div class="card"><h2>Pseudocode</h2><pre>for s in suppliers:
+    s.drift  = (s.lead_time_30d - s.lead_time_90d) / s.lead_time_90d
+    s.otif_d = s.otif_90d - s.otif_30d
+    s.cover  = s.stock / s.daily_use
+    s.risk   = w1*norm(drift) + w2*norm(otif_d) + w3*norm(1/cover) + w4*norm(transit_delay)
+    if s.risk &gt;= T or s.cover &lt; s.lead_time:
+        alert(s, days_at_risk = s.lead_time - s.cover)
+        s.action = choose(MITIGATIONS, s.dominant_driver)</pre></div>
+<div class="card"><h2>Interactive demo <span style="font-weight:400;color:var(--mut);font-size:13px">(synthetic data – move the sliders)</span></h2><div class="ctl"><div><label>Weight: supplier performance: <b id="v_w1"></b><input type="range" data-p="w1" min="0" max="10" step="1" value="4"></label></div><div><label>Weight: inventory cover: <b id="v_w2"></b><input type="range" data-p="w2" min="0" max="10" step="1" value="4"></label></div><div><label>Weight: transport delay: <b id="v_w3"></b><input type="range" data-p="w3" min="0" max="10" step="1" value="2"></label></div><div><label>Alert threshold: <b id="v_th"></b><input type="range" data-p="th" min="0.2" max="0.9" step="0.05" value="0.5"></label></div></div><div class="kpis" id="kpis"></div><div class="tw"><table id="tbl"></table></div><div class="bars" id="bars"></div><div class="ins" id="ins"></div></div>
+</div>
+<script>
+function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function fmt$(v){return v>=1e6?'$'+(v/1e6).toFixed(2)+'M':v>=1e3?'$'+(v/1e3).toFixed(0)+'k':'$'+Math.round(v)}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+const P={};
+function readParams(){document.querySelectorAll('[data-p]').forEach(i=>{P[i.dataset.p]=parseFloat(i.value);document.getElementById('v_'+i.dataset.p).textContent=i.value})}
+function draw(){readParams();const o=run(P);
+ document.getElementById('kpis').innerHTML=o.kpis.map(k=>`<div class="kpi"><small>${esc(k[0])}</small><div>${esc(k[1])}</div></div>`).join('');
+ document.getElementById('tbl').innerHTML='<tr>'+o.cols.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr>'+o.rows.map(r=>'<tr>'+r.map(c=>`<td>${esc(c)}</td>`).join('')+'</tr>').join('');
+ const mx=Math.max(...o.bars.map(b=>Math.abs(b[1])),o.barRef||0)||1;
+ document.getElementById('bars').innerHTML=`<b style="font-size:13px">${esc(o.barTitle)}</b>`+o.bars.map(b=>`<div class="br"><span>${esc(b[0])}</span><div class="bt"><div class="bf ${b[1]<0?'neg':''}" style="width:${Math.abs(b[1])/mx*100}%"></div>${o.barRef!=null?`<div class="ref" style="left:${o.barRef/mx*100}%"></div>`:''}</div><span>${(+b[1]).toFixed(Math.abs(b[1])>=100?0:2)}</span></div>`).join('');
+ document.getElementById('ins').textContent='💡 '+o.insight}
+document.querySelectorAll('[data-p]').forEach(i=>i.addEventListener('input',draw));
+
+
+const R=rng(8);const D=Array.from({length:12},(_,i)=>{const lt=10+Math.round(R()*30);return {n:'Supplier '+String.fromCharCode(65+i),sup:R(),cover:Math.round(4+R()*40),lt,tr:R()}});
+function run(p){const W=+p.w1+ +p.w2+ +p.w3||1;
+ const rows=D.map(d=>{const inv=Math.min(1,Math.max(0,1-d.cover/d.lt/1.5));const r=(p.w1*d.sup+p.w2*inv+p.w3*d.tr)/W;const dr=[['Supplier',p.w1*d.sup],['Inventory',p.w2*inv],['Transport',p.w3*d.tr]].sort((a,b)=>b[1]-a[1])[0][0];return {d,r,dr,al:r>=p.th||d.cover<d.lt*0.6}}).sort((a,b)=>b.r-a.r);
+ const A={Supplier:'Qualify alternate supplier / expedite PO',Inventory:'Raise safety stock; split orders',Transport:'Re-route / switch carrier'};
+ return {kpis:[['Suppliers monitored',D.length],['Alerts',rows.filter(x=>x.al).length],['Max days at risk',Math.max(0,...rows.map(x=>x.d.lt-x.d.cover)).toFixed(0)]],
+ cols:['Supplier','Risk score','Days cover','Lead time','Main driver','Status','Mitigation'],rows:rows.map(x=>[x.d.n,x.r.toFixed(2),x.d.cover,x.d.lt,x.dr,x.al?'🔴 Alert':'🟢 OK',x.al?A[x.dr]:'Monitor']),
+ bars:rows.map(x=>[x.d.n,x.r]),barTitle:'Composite risk score',barRef:+p.th,insight:'Alerts fire when risk crosses the threshold or stock cover falls below ~60% of lead time – giving weeks of warning instead of discovering the shortage on the line.'};}
+
+draw();</script></body></html>

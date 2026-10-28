@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factory Machine Health Dashboard</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.88; transform: scale(1.02); }
+    }
+    .badge-pulse {
+      animation: pulse-subtle 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-6 font-sans antialiased selection:bg-pink-500 selection:text-white">
+
+  <!-- TOP HEADER BAR -->
+  <header class="max-w-7xl mx-auto mb-6 bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 shadow-2xl backdrop-blur-md">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">🏭</span>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent">
+              Factory Pulse — Smart Machine Health
+            </h1>
+            <p class="text-slate-400 text-sm mt-0.5">
+              Electrical Appliance Plant • Line 3 Live Monitor • Simple Status & Early Warning
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATUS SUMMARY CHIPS -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+          1 Running Smoothly
+        </div>
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+          1 Needs A Checkup
+        </div>
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold badge-pulse">
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+          1 Action Required
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK SIMPLE GUIDE BAR -->
+    <div class="mt-4 pt-4 border-t border-slate-700/50 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
+      <div class="flex items-center gap-4 flex-wrap">
+        <span class="font-bold text-slate-400 uppercase tracking-wider">Health Meter Colors:</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-md bg-emerald-500"></span> <strong>Green (75-100%):</strong> Healthy, no action needed</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-md bg-amber-400"></span> <strong>Yellow (50-74%):</strong> Wear starting, plan ahead</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-md bg-rose-500"></span> <strong>Red (Below 50%):</strong> Fix scheduled before break</span>
+      </div>
+      <button onclick="toggleGlossary()" class="text-sky-400 hover:text-sky-300 font-medium underline flex items-center gap-1">
+        💡 Plain-English Glossary
+      </button>
+    </div>
+  </header>
+
+  <!-- GLOSSARY MODAL (HIDDEN BY DEFAULT) -->
+  <div id="glossaryModal" class="hidden max-w-7xl mx-auto mb-6 bg-indigo-950/70 border border-indigo-700/60 rounded-2xl p-5 text-sm text-slate-200">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-bold text-indigo-300 text-base flex items-center gap-2">📖 Plain-English Guide to Sensor Words</h3>
+      <button onclick="toggleGlossary()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+      <div class="bg-slate-900/60 p-3 rounded-xl border border-indigo-900">
+        <strong class="text-teal-300 block text-sm mb-1">Health Score (0 - 100%)</strong>
+        Like machine battery life. 100% is fresh out of the box. Below 50% means wear is severe and a fix should happen soon to avoid sudden stoppage.
+      </div>
+      <div class="bg-slate-900/60 p-3 rounded-xl border border-indigo-900">
+        <strong class="text-sky-300 block text-sm mb-1">Shaking (Vibration)</strong>
+        How much the machine rattles. A smooth machine hums gently (< 1.5 mm/s). Heavy shaking (> 4 mm/s) means loose parts or bad bearings.
+      </div>
+      <div class="bg-slate-900/60 p-3 rounded-xl border border-indigo-900">
+        <strong class="text-purple-300 block text-sm mb-1">Safe Hours Left (RUL)</strong>
+        How many hours the machine can keep making good products before it could break down. Gives our team time to fix it during shift breaks.
+      </div>
+      <div class="bg-slate-900/60 p-3 rounded-xl border border-indigo-900">
+        <strong class="text-pink-300 block text-sm mb-1">Fix Plan (Prescriptive)</strong>
+        Exact instructions for the mechanic: which spare part to grab, what tools to take, and when to fix it without stopping production line quota.
+      </div>
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto space-y-6">
+
+    <!-- 3 MAIN MACHINE CARDS -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- MACHINE 1: PRESS_01 (CRITICAL RED) -->
+      <div class="bg-slate-800/90 border-2 border-rose-500/70 rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+        <div class="absolute top-0 right-0 w-36 h-36 bg-rose-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div>
+          <!-- Header -->
+          <div class="flex items-start justify-between gap-2 mb-4">
+            <div>
+              <span class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 text-xs font-black tracking-wide uppercase border border-rose-500/40">
+                Action Required
+              </span>
+              <h2 class="text-2xl font-black text-white mt-2">Press 01</h2>
+              <p class="text-xs text-slate-400">Metal Stamping Press • Motor Parts</p>
+            </div>
+            <div class="text-right">
+              <span class="text-3xl font-black text-rose-400">32%</span>
+              <span class="block text-[10px] uppercase font-bold text-slate-400">Health Score</span>
+            </div>
+          </div>
+
+          <!-- Health Bar -->
+          <div class="w-full bg-slate-950/80 rounded-full h-3.5 p-0.5 border border-slate-700 mb-5">
+            <div class="bg-gradient-to-r from-rose-600 to-rose-400 h-2.5 rounded-full transition-all duration-700" style="width: 32%;"></div>
+          </div>
+
+          <!-- Simple Issue Summary Box -->
+          <div class="bg-rose-950/30 border border-rose-800/50 rounded-2xl p-4 mb-4">
+            <div class="flex items-center gap-2 text-rose-300 text-sm font-bold mb-1">
+              <span>⚠️</span> What is going on?
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              The <strong>main flywheel roller bearing</strong> is worn out. It is shaking strongly and overheating.
+            </p>
+            <div class="mt-2.5 flex items-center justify-between text-xs pt-2 border-t border-rose-900/40">
+              <span class="text-slate-400 font-medium">Safe Time Remaining:</span>
+              <span class="text-rose-300 font-black text-sm bg-rose-950/70 px-2 py-0.5 rounded border border-rose-700">~18 Hours Left</span>
+            </div>
+          </div>
+
+          <!-- Easy Metrics -->
+          <div class="grid grid-cols-3 gap-2 text-center mb-5">
+            <div class="bg-slate-900/70 p-2.5 rounded-xl border border-slate-700/60">
+              <span class="text-[11px] text-slate-400 block font-medium">Shaking</span>
+              <span class="text-base font-black text-rose-400">4.8 mm/s</span>
+              <span class="text-[10px] text-rose-300/80 block">Heavy Rattle</span>
+            </div>
+            <div class="bg-slate-900/70 p-2.5 rounded-xl border border-slate-700/60">
+              <span class="text-[11px] text-slate-400 block font-medium">Heat</span>
+              <span class="text-base font-black text-amber-300">98 °C</span>
+              <span class="text-[10px] text-amber-300/80 block">Hot</span>
+            </div>
+            <div class="bg-slate-900/70 p-2.5 rounded-xl border border-slate-700/60">
+              <span class="text-[11px] text-slate-400 block font-medium">Motor Draw</span>
+              <span class="text-base font-black text-slate-200">21 Amps</span>
+              <span class="text-[10px] text-slate-400 block">Straining</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prescriptive Fix Plan -->
+        <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-700">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+              🛠️ <strong>Recommended Action:</strong>
+            </span>
+            <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md font-mono">WO-202609-1001</span>
+          </div>
+          <p class="text-xs text-slate-300 mb-2.5 font-medium">
+            Replace flywheel bearing assembly during the <strong class="text-sky-300">6:00 AM shift change</strong>.
+          </p>
+          <div class="flex flex-wrap gap-1.5 text-[11px]">
+            <span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">📦 Part: SKF-22216 Bearing (Aisle 4)</span>
+            <span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">⏱️ Takes ~4.5 hrs</span>
+            <span class="bg-emerald-950/60 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800">✅ 0 Production Lost</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MACHINE 2: INJECTION_02 (CAUTION YELLOW) -->
+      <div class="bg-slate-800/90 border-2 border-amber-400/60 rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+        <div class="absolute top-0 right-0 w-36 h-36 bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div>
+          <!-- Header -->
+          <div class="flex items-start justify-between gap-2 mb-4">
+            <div>
+              <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-black tracking-wide uppercase border border-amber-500/40">
+                Keep An Eye Out
+              </span>
+              <h2 class="text-2xl font-black text-white mt-2">Molder 02</h2>
+              <p class="text-xs text-slate-400">Plastic Injection Machine • Fridge Doors</p>
+            </div>
+            <div class="text-right">
+              <span class="text-3xl font-black text-amber-300">48%</span>
+              <span class="block text-[10px] uppercase font-bold text-slate-400">Health Score</span>
+            </div>
+          </div>
+
+          <!-- Health Bar -->
+          <div class="w-full bg-slate-950/80 rounded-full h-3.5 p-0.5 border border-slate-700 mb-5">
+            <div class="bg-gradient-to-r from-amber-500 to-yellow-300 h-2.5 rounded-full transition-all duration-700" style="width: 48%;"></div>
+          </div>
+
+          <!-- Simple Issue Summary Box -->
+          <div class="bg-amber-950/30 border border-amber-800/50 rounded-2xl p-4 mb-4">
+            <div class="flex items-center gap-2 text-amber-300 text-sm font-bold mb-1">
+              <span>🔍</span> What is going on?
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              The <strong>clamp hydraulic seal</strong> has a small internal leak. Oil pressure is slipping lower.
+            </p>
+            <div class="mt-2.5 flex items-center justify-between text-xs pt-2 border-t border-amber-900/40">
+              <span class="text-slate-400 font-medium">Safe Time Remaining:</span>
+              <span class="text-amber-300 font-black text-sm bg-amber-950/70 px-2 py-0.5 rounded border border-amber-700">~113 Hours Left</span>
+            </div>
+          </div>
+
+          <!-- Easy Metrics -->
+          <div class="grid grid-cols-3 gap-2 text-center mb-5">
+            <div class="bg-slate-900/70 p-2.5 rounded-xl border border-slate-700/60">
+              <span class="text-[11px] text-slate-400 block font-medium">Oil Pressure</span>
+              <span class="text-base font-black text-amber-300">85 bar</span>
+              <span class="text-[10px] text-amber-300/80 block">Was 140 bar</span>
+            </div>
+            <div class="bg-slate-900/70 p-2.5 rounded-xl border border-slate-700/60">
+              <span class="text-[11px] text-slate-400 block font-medium">Barrel Heat</span>
+              <span class="text-base font-black text-slate-200">178 °C</span>
+              <span class="text-[10px] text-emerald-400 block">Normal</span>
+            </div>
+            <div class="bg-slate-900/70 p-2.5 rounded-xl border border-slate-700/60">
+              <span class="text-[11px] text-slate-400 block font-medium">Shaking</span>
+              <span class="text-base font-black text-emerald-400">0.39 mm/s</span>
+              <span class="text-[10px] text-emerald-400 block">Smooth</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prescriptive Fix Plan -->
+        <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-700">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+              🛠️ <strong>Recommended Action:</strong>
+            </span>
+            <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md font-mono">WO-202609-1002</span>
+          </div>
+          <p class="text-xs text-slate-300 mb-2.5 font-medium">
+            Swap cylinder piston seals during <strong class="text-sky-300">Sunday Planned PM buffer (22:00)</strong>.
+          </p>
+          <div class="flex flex-wrap gap-1.5 text-[11px]">
+            <span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">📦 Part: Seal Kit D-160 (Aisle 5)</span>
+            <span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">⏱️ Takes ~3.5 hrs</span>
+            <span class="bg-emerald-950/60 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800">✅ Pre-scheduled Window</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MACHINE 3: ASSEMBLY_03 (HEALTHY GREEN) -->
+      <div class="bg-slate-800/90 border-2 border-emerald-500/60 rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+        <div class="absolute top-0 right-0 w-36 h-36 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div>
+          <!-- Header -->
+          <div class="flex items-start justify-between gap-2 mb-4">
+            <div>
+              <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs font-black tracking-wide uppercase border border-emerald-500/40">
+                Running Smoothly
+              </span>
+              <h2 class="text-2xl font-black text-white mt-2">Assembly 03</h2>
+              <p class="text-xs text-slate-400">Rotary Robotics • Stator Assembly</p>
+            </div>
+            <div class="text-right">
+              <span class="text-3xl font-black text-emerald-400">88%</span>
+              <span class="block text-[10px] uppercase font-bold text-slate-400">Health Score</span>
+            </div>
+          </div>
+
+          <!-- Health Bar -->
+          <div class="w-full bg-slate-950/80 rounded-full h-3.5 p-0.5 border border-slate-700 mb-5">
+            <div class="bg-gradient-to-r from-teal-500 to-emerald-400 h-2.5 rounded-full transition-all duration-700" style="width: 88%;"></div>
+          </div>
+
+          <!-- Simple Issue Summary Box -->
+          <div class="bg-emerald-950/30 border border-emerald-800/50 rounded-2xl p-4 mb-4">
+            <div class="flex items-center gap-2 text-emerald-300 text-sm font-bold mb-1">
+              <span>✨</span> What is going on?
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Timing drive belt had slipping earlier; <strong>replaced and recalibrated</strong> by tech John. Running in prime condition!
+            </p>
+            <div class="mt-2.5 flex items-center justify-between text-xs pt-2 border-t border-emerald-900/40">
+              <span class="text-slate-400 font-medium">Safe Time Remaining:</span>
+              <span class="text-emerald-300 font-black text-sm bg-emerald-950/70 px-2 py-0.5 rounded border border-emerald-700">> 118 Hours (Nominal)</span>
+            </div>
+          </div>
+
+          <!-- Easy Metrics -->
+          <div class="grid grid-cols-3 gap-2 text-center mb-5">
+            <div class="bg-slate-900/70 p-2.5 rounded-xl border border-slate-700/60">
+              <span class="text-[11px] text-slate-400 block font-medium">Shaking</span>
+              <span class="text-base font-black text-emerald-400">0.42 mm/s</span>
+              <span class="text-[10px] text-emerald-300/80 block">Super Smooth</span>
+            </div>
+            <div class="bg-slate-900/70 p-2.5 rounded-xl border border-slate-700/60">
+              <span class="text-[11px] text-slate-400 block font-medium">Heat</span>
+              <span class="text-base font-black text-emerald-400">42 °C</span>
+              <span class="text-[10px] text-emerald-300/80 block">Cool Hum</span>
+            </div>
+            <div class="bg-slate-900/70 p-2.5 rounded-xl border border-slate-700/60">
+              <span class="text-[11px] text-slate-400 block font-medium">Belt Tension</span>
+              <span class="text-base font-black text-emerald-400">450 N</span>
+              <span class="text-[10px] text-emerald-300/80 block">Target Exact</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prescriptive Fix Plan -->
+        <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-700">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+              🛠️ <strong>Recommended Action:</strong>
+            </span>
+            <span class="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded-md font-mono border border-emerald-800">FIX VERIFIED</span>
+          </div>
+          <p class="text-xs text-slate-300 mb-2.5 font-medium">
+            No maintenance needed. Production running at <strong class="text-emerald-300">100% full capacity</strong> (35 units/min).
+          </p>
+          <div class="flex flex-wrap gap-1.5 text-[11px]">
+            <span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">📦 Spares: Restocked in Aisle 1</span>
+            <span class="bg-emerald-950/60 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800">✅ Closed Out by Tech Sarah</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM ROW: WORK ORDER FEED & PLANT STATS -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- READY-TO-USE WORK ORDERS (2 COLS) -->
+      <div class="lg:col-span-2 bg-slate-800/90 border border-slate-700/80 rounded-3xl p-6 shadow-2xl">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">📋</span>
+            <div>
+              <h3 class="text-lg font-bold text-white">Upcoming Maintenance Fixes (Sent to Team)</h3>
+              <p class="text-xs text-slate-400">Matched to shift changeovers so the production line never stops unexpectedly</p>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-bold">
+            Live ERP Queue
+          </span>
+        </div>
+
+        <div class="space-y-3">
+          <!-- Item 1 -->
+          <div class="p-4 rounded-2xl bg-slate-900/80 border border-rose-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 font-black text-sm">
+                P-01
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-white">Replace Drive Shaft Bearing</span>
+                  <span class="bg-rose-950 text-rose-300 text-[10px] font-bold px-2 py-0.2 rounded border border-rose-700">URGENT</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5">Press 01 • Lockout breaker, heat new bearing to 110°C, repack grease</p>
+              </div>
+            </div>
+            <div class="text-right sm:text-right shrink-0">
+              <span class="text-xs font-bold text-sky-300 block">Tomorrow 06:00 AM</span>
+              <span class="text-[11px] text-slate-400">Shift Handover Window</span>
+            </div>
+          </div>
+
+          <!-- Item 2 -->
+          <div class="p-4 rounded-2xl bg-slate-900/80 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 font-black text-sm">
+                M-02
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-white">Replace Clamp Cylinder Seal</span>
+                  <span class="bg-amber-950 text-amber-300 text-[10px] font-bold px-2 py-0.2 rounded border border-amber-700">PLANNED</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5">Molder 02 • Bleed hydraulic oil pressure, install polyurethane seal kit</p>
+              </div>
+            </div>
+            <div class="text-right sm:text-right shrink-0">
+              <span class="text-xs font-bold text-sky-300 block">Sunday 10:00 PM</span>
+              <span class="text-[11px] text-slate-400">Weekly Clean Break</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SYSTEM ACCURACY SCORECARD (1 COL) -->
+      <div class="bg-gradient-to-br from-indigo-900/40 via-slate-800 to-slate-900 border border-indigo-700/40 rounded-3xl p-6 shadow-2xl flex flex-col justify-between">
+        <div>
+          <div class="flex items-center gap-2.5 mb-3">
+            <span class="text-2xl">🎯</span>
+            <h3 class="text-lg font-bold text-white">AI Accuracy Scorecard</h3>
+          </div>
+          <p class="text-xs text-slate-300 mb-4">
+            Validated by real technician repair reports at our appliance factory.
+          </p>
+
+          <div class="space-y-3.5">
+            <div>
+              <div class="flex justify-between text-xs font-bold mb-1">
+                <span class="text-slate-300">True Warning Accuracy:</span>
+                <span class="text-emerald-400 font-black">100.0%</span>
+              </div>
+              <div class="w-full bg-slate-950 rounded-full h-2">
+                <div class="bg-emerald-400 h-2 rounded-full" style="width: 100%;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs font-bold mb-1">
+                <span class="text-slate-300">False Alarms:</span>
+                <span class="text-sky-400 font-black">0.0% (Zero Spurious Trips)</span>
+              </div>
+              <div class="w-full bg-slate-950 rounded-full h-2">
+                <div class="bg-sky-400 h-2 rounded-full" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs font-bold mb-1">
+                <span class="text-slate-300">Prediction Timing Error:</span>
+                <span class="text-purple-300 font-black">±0.87 Hours (Accurate)</span>
+              </div>
+              <div class="w-full bg-slate-950 rounded-full h-2">
+                <div class="bg-purple-400 h-2 rounded-full" style="width: 95%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5 pt-4 border-t border-slate-700/60 flex items-center justify-between text-[11px] text-slate-400">
+          <span>AI Model Version: <strong class="text-white">v1.1.0</strong></span>
+          <span class="flex items-center gap-1 text-emerald-400 font-bold">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Active & Learning
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    function toggleGlossary() {
+      const modal = document.getElementById('glossaryModal');
+      modal.classList.toggle('hidden');
+    }
+  </script>
+</body>
+</html>
